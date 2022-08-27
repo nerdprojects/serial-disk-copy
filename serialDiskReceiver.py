@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import serial, time, struct, binascii
 
 # 2400 baud, 8 data bits, 1 stop bits, no parity, no flow control.
