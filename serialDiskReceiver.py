@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 import serial, time, struct, binascii
 
@@ -9,8 +9,8 @@ comm = serial.Serial("/dev/ttyS0", 57600, 8, "N", 2, timeout=None)
 outputFile = open("serialDiskCopy-data.bin", "wb+")
 
 
-#print "listening, waiting for DISK header"
-print "ready, waiting for serial data..."
+#print("listening, waiting for DISK header")
+print("ready, waiting for serial data...")
 while True:
 
 	crcErrors = []
@@ -20,33 +20,33 @@ while True:
 #	continue
 
 	# read DISK header bytes
-	inputBytes = ""
-	while inputBytes != "DISK":
+	inputBytes = b""
+	while inputBytes != b"DISK":
 		inputBytes = comm.read(4)
-	print "received DISK header"
+	print("received DISK header")
 
 	# read disk size as long
 	inputBytes = comm.read(4)
 	diskSize = struct.unpack(">l", inputBytes)[0]
-	print "received disk size: "+str(diskSize)
+	print("received disk size: "+str(diskSize))
 
-	print "disk transfer started"
+	print("disk transfer started")
 
 	startTime = time.time()
 	totalReadBytes = 0
 	while totalReadBytes < diskSize:
 
 		# read DATA header bytes
-		inputBytes = ""
-		while inputBytes != "DATA":
+		inputBytes = b""
+		while inputBytes != b"DATA":
 			inputBytes = comm.read(4)
-			#print "waining for data, received "+inputBytes
-		#print "received DATA header"
+			#print("waining for data, received "+inputBytes)
+		#print("received DATA header")
 
 		# read data size as long
 		inputBytes = comm.read(4)
 		dataSize = struct.unpack(">l", inputBytes)[0]
-		#print "received data size: "+str(dataSize)
+		#print("received data size: "+str(dataSize))
 
 		# read data
 		dataBytes = comm.read(dataSize)
@@ -54,7 +54,7 @@ while True:
 		# read crc as unsigned int
 		inputBytes = comm.read(4)
 		dataCrc = struct.unpack(">I", inputBytes)[0]
-		#print "received crc: "+str(dataCrc)
+		#print("received crc: "+str(dataCrc))
 
 		# calc crc
 		refCrc = binascii.crc32(dataBytes)
@@ -62,9 +62,9 @@ while True:
 	
 		if dataCrc != refCrc:
 			crcErrors.append(str(totalReadBytes)+" - "+str(dataSize))
-			print "CRC DOES NOT MATCH"
+			print("CRC DOES NOT MATCH")
 		#else:
-			#print "CRC matches"
+			#print("CRC matches")
 
 		totalReadBytes += dataSize
 		outputFile.write(dataBytes)
@@ -73,17 +73,17 @@ while True:
 		elapsedSeconds = time.time()-startTime
 		bytesPerSecond = float(totalReadBytes)/float(elapsedSeconds)
 		etaSeconds = (diskSize - totalReadBytes) / bytesPerSecond 
-		print str(int(process))+"% - "+str(round(bytesPerSecond/1000*8,3))+"kb/s - ETA "+str(round(etaSeconds/60,2))+" min - received "+str(dataSize)+" bytes from "+str(totalReadBytes-dataSize)+" to "+str(totalReadBytes)+" of total "+str(diskSize)
+		print(str(int(process))+"% - "+str(round(bytesPerSecond/1000*8,3))+"kb/s - ETA "+str(round(etaSeconds/60,2))+" min - received "+str(dataSize)+" bytes from "+str(totalReadBytes-dataSize)+" to "+str(totalReadBytes)+" of total "+str(diskSize))
 
 	# read DONE footer bytes
-	inputBytes = ""
-	while inputBytes != "DONE":
+	inputBytes = b""
+	while inputBytes != b"DONE":
 		inputBytes = comm.read(4)
-	#print "received DONE footer"
-	print ""
-	print str(len(crcErrors))+" errors occured"
+	#print("received DONE footer")
+	print("")
+	print(str(len(crcErrors))+" errors occured")
 	for error in crcErrors:
-		print error
-	print ""
-	print "we are done..."
+		print(error)
+	print("")
+	print("we are done...")
 	break;
